@@ -2,7 +2,6 @@ package com.kotlinwebapp.bookstore.services.impl
 
 import com.kotlinwebapp.bookstore.repositories.AuthorRepository
 import com.kotlinwebapp.bookstore.testAuthorEntityA
-import com.kotlinwebapp.bookstore.toAuthorDto
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -27,5 +26,19 @@ class AuthorServiceImplTest @Autowired constructor(
                 id = savedData.id,
             )
         )
+    }
+
+    @Test
+    fun `test que list retorna uma lista vazia quando nao houver authors`() {
+        val result = underTest.list()
+        assertThat(result).isEmpty()
+    }
+
+    @Test
+    fun `test que list retorna authors quando tiver authors na database`() {
+        val savedAuthor = authorRepository.save(testAuthorEntityA())
+        val expected = listOf(savedAuthor)
+        val result = underTest.list()
+        assertThat(result).isEqualTo(expected)
     }
 }

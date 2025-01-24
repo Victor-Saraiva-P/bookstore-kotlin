@@ -4,9 +4,11 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.kotlinwebapp.bookstore.domain.entities.AuthorEntity
 import com.kotlinwebapp.bookstore.services.AuthorService
 import com.kotlinwebapp.bookstore.testAuthorDtoA
+import com.kotlinwebapp.bookstore.testAuthorEntityA
 import com.ninjasquad.springmockk.MockkBean
 import io.mockk.every
 import io.mockk.verify
+import org.hamcrest.CoreMatchers.equalTo
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -14,7 +16,10 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.MediaType
 import org.springframework.test.web.servlet.MockMvc
+import org.springframework.test.web.servlet.get
 import org.springframework.test.web.servlet.post
+
+private const val AUTHORS_BASE_URL = "/v1/authors"
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -36,7 +41,7 @@ class AuthorsControllerTest @Autowired constructor(
 
     @Test
     fun `test que cria author e salva o author `() {
-        mockMvc.post("/v1/authors") {
+        mockMvc.post(AUTHORS_BASE_URL) {
             contentType = MediaType.APPLICATION_JSON
             accept = MediaType.APPLICATION_JSON
             content = objectMapper.writeValueAsString(
@@ -44,20 +49,20 @@ class AuthorsControllerTest @Autowired constructor(
             )
         }
 
-        val expected  = AuthorEntity(
+        val expected = AuthorEntity(
             id = null,
             name = "nome de teste",
             age = 404,
             image = "author-image.jpeg",
             description = "descricao"
         )
-        verify { authorService.save(expected ) }
+        verify { authorService.save(expected) }
 
     }
 
     @Test
     fun `test que cria um author retorna um HTTP 201 status de sucesso na criacao`() {
-        mockMvc.post("/v1/authors") {
+        mockMvc.post(AUTHORS_BASE_URL) {
             contentType = MediaType.APPLICATION_JSON
             accept = MediaType.APPLICATION_JSON
             content = objectMapper.writeValueAsString(
@@ -74,4 +79,41 @@ class AuthorsControllerTest @Autowired constructor(
         }
     }
 
+    @Test
+    fun `test que list retorna uma lista vazia e HTTP 200 quando nenhum authors na database`() {
+        every {
+            authorService.list()
+        } answers {
+            emptyList()
+        }
+
+        mockMvc.get(AUTHORS_BASE_URL) {
+            contentType = MediaType.APPLICATION_JSON
+            accept = MediaType.APPLICATION_JSON
+        }.andExpect {
+            status { isOk() }
+            content { json("[]") }
+        }
+    }
+
+    @Test
+    fun `testa que a lista retorna os authors e HTTP 200 quando tiver authors na database`(){
+        every {
+            authorService.list()
+        } answers {
+            listOf(testAuthorEntityA(1))
+        }
+
+        mockMvc.get(AUTHORS_BASE_URL) {
+            contentType = MediaType.APPLICATION_JSON
+            accept = MediaType.APPLICATION_JSON
+        }.andExpect {
+            status { isOk() }
+            content { jsonPath("$[0].id", equalTo(1)) }
+            content { jsonPath("$[0].name", equalTo("nome de teste")) }
+            content { jsonPath("$[0].age", equalTo(404)) }
+            content { jsonPath("$[0].description", equalTo("descricao")) }
+            content { jsonPath("$[0].image", equalTo("author-image.jpeg")) }
+        }
+    }
 }
