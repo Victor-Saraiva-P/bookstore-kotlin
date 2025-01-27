@@ -97,7 +97,7 @@ class AuthorsControllerTest @Autowired constructor(
     }
 
     @Test
-    fun `testa que a lista retorna os authors e HTTP 200 quando tiver authors na database`(){
+    fun `testa que a lista retorna os authors e HTTP 200 quando tiver authors na database`() {
         every {
             authorService.list()
         } answers {
@@ -114,6 +114,41 @@ class AuthorsControllerTest @Autowired constructor(
             content { jsonPath("$[0].age", equalTo(404)) }
             content { jsonPath("$[0].description", equalTo("descricao")) }
             content { jsonPath("$[0].image", equalTo("author-image.jpeg")) }
+        }
+    }
+
+    @Test
+    fun `retorna 404 quando nao for encontrado nenhum author`() {
+        every {
+            authorService.get(any())
+        } answers {
+            null
+        }
+
+        mockMvc.get("$AUTHORS_BASE_URL/999") {
+            contentType = MediaType.APPLICATION_JSON
+            accept = MediaType.APPLICATION_JSON
+        }.andExpect { status { isNotFound() } }
+    }
+
+    @Test
+    fun `test que retorna 200 e um author quando um author for encontrado`() {
+        every {
+            authorService.get(any())
+        } answers {
+            testAuthorEntityA(id = 999)
+        }
+
+        mockMvc.get("$AUTHORS_BASE_URL/999") {
+            contentType = MediaType.APPLICATION_JSON
+            accept = MediaType.APPLICATION_JSON
+        }.andExpect {
+            status { isOk() }
+            content { jsonPath("$.id", equalTo(999)) }
+            content { jsonPath("$.name", equalTo("nome de teste")) }
+            content { jsonPath("$.age", equalTo(404)) }
+            content { jsonPath("$.description", equalTo("descricao")) }
+            content { jsonPath("$.image", equalTo("author-image.jpeg")) }
         }
     }
 }
