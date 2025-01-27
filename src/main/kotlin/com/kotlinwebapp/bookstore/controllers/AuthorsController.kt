@@ -18,7 +18,7 @@ class AuthorsController(
 
     @PostMapping
     fun createAuthor(@RequestBody authorDto: AuthorDto): ResponseEntity<AuthorDto> {
-        val createdAuthor = authorService.save(
+        val createdAuthor = authorService.create(
             authorDto.toAuthorEntity()
         ).toAuthorDto()
 

@@ -10,7 +10,7 @@ import java.util.*
 @Service                 /*          Dependecy Injection              */
 class AuthorServiceImpl( private val authorRepository: AuthorRepository) : AuthorService {
 
-    override fun save(authorEntity: AuthorEntity): AuthorEntity {
+    override fun create(authorEntity: AuthorEntity): AuthorEntity {
         return authorRepository.save(authorEntity)
     }
 
