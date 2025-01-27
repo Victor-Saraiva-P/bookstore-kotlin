@@ -41,4 +41,17 @@ class AuthorServiceImplTest @Autowired constructor(
         val result = underTest.list()
         assertThat(result).isEqualTo(expected)
     }
+
+    @Test
+    fun `test que retorna null quando nenhum author estiver presente na database`() {
+        val result = underTest.get(999)
+        assertThat(result).isNull()
+    }
+
+    @Test
+    fun `test que o get retorna o author quando tiver presente um author na database`() {
+        val savedAuthor = authorRepository.save(testAuthorEntityA())
+        val result = underTest.get(savedAuthor.id!!)
+        assertThat(result).isNotNull()
+    }
 }
