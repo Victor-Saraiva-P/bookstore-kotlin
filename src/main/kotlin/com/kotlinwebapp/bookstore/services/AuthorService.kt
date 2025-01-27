@@ -8,4 +8,6 @@ interface AuthorService {
     fun list(): List<AuthorEntity>
 
     fun get(id: Long): AuthorEntity?
+
+    fun fullUpdate(id: Long, authorEntity: AuthorEntity): AuthorEntity
 }
