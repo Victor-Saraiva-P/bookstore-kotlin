@@ -4,6 +4,7 @@ import com.kotlinwebapp.bookstore.repositories.AuthorRepository
 import com.kotlinwebapp.bookstore.testAuthorEntityA
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.data.repository.findByIdOrNull
@@ -26,6 +27,14 @@ class AuthorServiceImplTest @Autowired constructor(
                 id = savedData.id,
             )
         )
+    }
+
+    @Test
+    fun `test quando um author com id invalido throws IllegalArgumentException`() {
+        assertThrows<IllegalArgumentException> {
+            val existingAuthor = testAuthorEntityA(id = 999)
+            underTest.create(existingAuthor)
+        }
     }
 
     @Test

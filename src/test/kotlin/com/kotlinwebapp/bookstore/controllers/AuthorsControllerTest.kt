@@ -80,6 +80,23 @@ class AuthorsControllerTest @Autowired constructor(
     }
 
     @Test
+    fun `test que cria um author e retorna 400 quando um IllegalArgument`() {
+        every {
+            authorService.create(any())
+        } throws (IllegalArgumentException())
+
+        mockMvc.post(AUTHORS_BASE_URL) {
+            contentType = MediaType.APPLICATION_JSON
+            accept = MediaType.APPLICATION_JSON
+            content = objectMapper.writeValueAsString(
+                testAuthorDtoA()
+            )
+        }.andExpect {
+            status { isBadRequest() }
+        }
+    }
+
+    @Test
     fun `test que list retorna uma lista vazia e HTTP 200 quando nenhum authors na database`() {
         every {
             authorService.list()
