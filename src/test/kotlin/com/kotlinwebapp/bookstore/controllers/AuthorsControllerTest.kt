@@ -18,6 +18,7 @@ import org.springframework.http.MediaType
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.get
 import org.springframework.test.web.servlet.post
+import org.springframework.test.web.servlet.put
 
 private const val AUTHORS_BASE_URL = "/v1/authors"
 
@@ -127,10 +128,10 @@ class AuthorsControllerTest @Autowired constructor(
         }.andExpect {
             status { isOk() }
             content { jsonPath("$[0].id", equalTo(1)) }
-            content { jsonPath("$[0].name", equalTo("nome de teste")) }
+            content { jsonPath("$[0].name", equalTo("nome de teste A")) }
             content { jsonPath("$[0].age", equalTo(404)) }
-            content { jsonPath("$[0].description", equalTo("descricao")) }
-            content { jsonPath("$[0].image", equalTo("author-image.jpeg")) }
+            content { jsonPath("$[0].description", equalTo("descricao do A")) }
+            content { jsonPath("$[0].image", equalTo("author-imageA.jpeg")) }
         }
     }
 
@@ -162,10 +163,45 @@ class AuthorsControllerTest @Autowired constructor(
         }.andExpect {
             status { isOk() }
             content { jsonPath("$.id", equalTo(999)) }
+            content { jsonPath("$.name", equalTo("nome de teste A")) }
+            content { jsonPath("$.age", equalTo(404)) }
+            content { jsonPath("$.description", equalTo("descricao do A")) }
+            content { jsonPath("$.image", equalTo("author-imageA.jpeg")) }
+        }
+    }
+
+    @Test
+    fun `test o full update do author retorna 200 e o author quando tiver sucesso`() {
+        every {
+            authorService.fullUpdate(any(), any())
+        } answers {
+            secondArg()
+        }
+
+        mockMvc.put("$AUTHORS_BASE_URL/999") {
+            contentType = MediaType.APPLICATION_JSON
+            accept = MediaType.APPLICATION_JSON
+            content = objectMapper.writeValueAsString(testAuthorDtoA(id = 999))
+        }.andExpect {
+            status { isOk() }
+            content { jsonPath("$.id", equalTo(999)) }
             content { jsonPath("$.name", equalTo("nome de teste")) }
             content { jsonPath("$.age", equalTo(404)) }
             content { jsonPath("$.description", equalTo("descricao")) }
             content { jsonPath("$.image", equalTo("author-image.jpeg")) }
         }
+    }
+
+    @Test
+    fun `test que o full updtade retorna 400 quando tem IllegalStateException`() {
+        every {
+            authorService.fullUpdate(any(), any())
+        } throws (IllegalStateException())
+
+        mockMvc.put("$AUTHORS_BASE_URL/999") {
+            contentType = MediaType.APPLICATION_JSON
+            accept = MediaType.APPLICATION_JSON
+            content = objectMapper.writeValueAsString(testAuthorDtoA(id = 999))
+        }.andExpect { status { isBadRequest() } }
     }
 }

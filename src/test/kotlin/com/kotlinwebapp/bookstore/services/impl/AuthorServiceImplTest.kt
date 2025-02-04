@@ -1,7 +1,9 @@
 package com.kotlinwebapp.bookstore.services.impl
 
+import com.kotlinwebapp.bookstore.domain.entities.AuthorEntity
 import com.kotlinwebapp.bookstore.repositories.AuthorRepository
 import com.kotlinwebapp.bookstore.testAuthorEntityA
+import com.kotlinwebapp.bookstore.testAuthorEntityB
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -62,5 +64,26 @@ class AuthorServiceImplTest @Autowired constructor(
         val savedAuthor = authorRepository.save(testAuthorEntityA())
         val result = underTest.get(savedAuthor.id!!)
         assertThat(result).isNotNull()
+    }
+    @Test
+    fun `test que o full update com sucesso faz o update do author na database`(){
+        val existingAuthor = authorRepository.save(testAuthorEntityA())
+        val existingAuhorId = existingAuthor.id!!
+        val updatedAuthor = testAuthorEntityB(id=existingAuhorId)
+
+        val result = underTest.fullUpdate(existingAuhorId, updatedAuthor)
+        assertThat(result).isEqualTo(updatedAuthor)
+
+        val retrievedAuthor = authorRepository.findByIdOrNull(existingAuhorId)
+        assertThat(retrievedAuthor).isNotNull().isEqualTo(updatedAuthor)
+    }
+
+    @Test
+    fun `test que testa o full update que ira dar throw IllegalStateException quando o author não existir no DB`(){
+        assertThrows<IllegalStateException>{
+            val nonExistingAuthorId = 999L
+            val updatedAuthor = testAuthorEntityB(id=nonExistingAuthorId)
+            underTest.fullUpdate(nonExistingAuthorId, updatedAuthor)
+        }
     }
 }
