@@ -5,6 +5,7 @@ import com.kotlinwebapp.bookstore.domain.entities.AuthorEntity
 import com.kotlinwebapp.bookstore.services.AuthorService
 import com.kotlinwebapp.bookstore.testAuthorDtoA
 import com.kotlinwebapp.bookstore.testAuthorEntityA
+import com.kotlinwebapp.bookstore.testAuthorUpdateRequestDtoA
 import com.ninjasquad.springmockk.MockkBean
 import io.mockk.every
 import io.mockk.verify
@@ -15,10 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.MediaType
-import org.springframework.test.web.servlet.MockMvc
-import org.springframework.test.web.servlet.get
-import org.springframework.test.web.servlet.post
-import org.springframework.test.web.servlet.put
+import org.springframework.test.web.servlet.*
 
 private const val AUTHORS_BASE_URL = "/v1/authors"
 
@@ -52,10 +50,10 @@ class AuthorsControllerTest @Autowired constructor(
 
         val expected = AuthorEntity(
             id = null,
-            name = "nome de teste",
-            age = 404,
-            image = "author-image.jpeg",
-            description = "descricao"
+            name = testAuthorDtoA().name,
+            age = testAuthorDtoA().age,
+            image = testAuthorDtoA().image,
+            description = testAuthorDtoA().description
         )
         verify { authorService.create(expected) }
 
@@ -185,10 +183,10 @@ class AuthorsControllerTest @Autowired constructor(
         }.andExpect {
             status { isOk() }
             content { jsonPath("$.id", equalTo(999)) }
-            content { jsonPath("$.name", equalTo("nome de teste")) }
-            content { jsonPath("$.age", equalTo(404)) }
-            content { jsonPath("$.description", equalTo("descricao")) }
-            content { jsonPath("$.image", equalTo("author-image.jpeg")) }
+            content { jsonPath("$.name", equalTo(testAuthorDtoA().name)) }
+            content { jsonPath("$.age", equalTo(testAuthorDtoA().age)) }
+            content { jsonPath("$.description", equalTo(testAuthorDtoA().description)) }
+            content { jsonPath("$.image", equalTo(testAuthorDtoA().image)) }
         }
     }
 
@@ -203,5 +201,40 @@ class AuthorsControllerTest @Autowired constructor(
             accept = MediaType.APPLICATION_JSON
             content = objectMapper.writeValueAsString(testAuthorDtoA(id = 999))
         }.andExpect { status { isBadRequest() } }
+    }
+
+    @Test
+    fun `test que o partial update author retorna 400 quando tem IllegalStateException`() {
+        every {
+            authorService.partialUpdate(any(), any())
+        } throws (IllegalStateException())
+
+        mockMvc.patch("$AUTHORS_BASE_URL/999") {
+            contentType = MediaType.APPLICATION_JSON
+            accept = MediaType.APPLICATION_JSON
+            content = objectMapper.writeValueAsString(testAuthorUpdateRequestDtoA(id = 999))
+        }.andExpect { status { isBadRequest() } }
+    }
+
+    @Test
+    fun `test que o partial update retorna 200 e o author que foi atualizado`() {
+        every {
+            authorService.partialUpdate(any(), any())
+        } answers {
+            testAuthorEntityA(id = 999)
+        }
+
+        mockMvc.patch("$AUTHORS_BASE_URL/999") {
+            contentType = MediaType.APPLICATION_JSON
+            accept = MediaType.APPLICATION_JSON
+            content = objectMapper.writeValueAsString(testAuthorUpdateRequestDtoA(id = 999))
+        }.andExpect {
+            status { isOk() }
+            content { jsonPath("$.id", equalTo(999)) }
+            content { jsonPath("$.name", equalTo(testAuthorUpdateRequestDtoA().name)) }
+            content { jsonPath("$.age", equalTo(testAuthorUpdateRequestDtoA().age)) }
+            content { jsonPath("$.description", equalTo(testAuthorUpdateRequestDtoA().description)) }
+            content { jsonPath("$.image", equalTo(testAuthorUpdateRequestDtoA().image)) }
+        }
     }
 }
