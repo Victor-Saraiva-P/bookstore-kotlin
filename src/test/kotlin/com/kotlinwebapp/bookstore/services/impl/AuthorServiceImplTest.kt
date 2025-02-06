@@ -6,6 +6,7 @@ import com.kotlinwebapp.bookstore.repositories.AuthorRepository
 import com.kotlinwebapp.bookstore.testAuthorEntityA
 import com.kotlinwebapp.bookstore.testAuthorEntityB
 import com.kotlinwebapp.bookstore.testAuthorUpdateRequestA
+import jakarta.transaction.Transactional
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -14,6 +15,7 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.data.repository.findByIdOrNull
 
 @SpringBootTest
+@Transactional
 class AuthorServiceImplTest @Autowired constructor(
     private val underTest: AuthorServiceImpl,
     private val authorRepository: AuthorRepository
@@ -184,5 +186,29 @@ class AuthorServiceImplTest @Autowired constructor(
 
         val retrievedAuthor = authorRepository.findByIdOrNull(existingAuthorId)
         assertThat(retrievedAuthor).isNotNull().isEqualTo(expected)
+    }
+
+    @Test
+    fun `test que usa o delete e deleta um author da database`() {
+        val existingAuthor = authorRepository.save(testAuthorEntityA())
+        val existingAuthorId = existingAuthor.id!!
+
+        underTest.delete(existingAuthorId)
+        assertThat(
+            authorRepository.existsById(
+                existingAuthorId
+            )
+        ).isFalse()
+    }
+
+    @Test
+    fun `test que usa o delete e deleta um author que NAO esta na database`() {
+        val nonExistingId = 999L
+
+        underTest.delete(nonExistingId)
+
+        assertThat(
+            authorRepository.existsById(nonExistingId)
+        ).isFalse()
     }
 }
