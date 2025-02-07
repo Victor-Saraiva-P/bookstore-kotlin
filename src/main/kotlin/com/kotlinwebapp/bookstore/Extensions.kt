@@ -1,34 +1,95 @@
 package com.kotlinwebapp.bookstore
 
-import com.kotlinwebapp.bookstore.domain.AuthorUpdateRequest
-import com.kotlinwebapp.bookstore.domain.dto.AuthorDto
-import com.kotlinwebapp.bookstore.domain.dto.AuthorUpdateRequestDto
-import com.kotlinwebapp.bookstore.domain.entities.AuthorEntity
+import com.kotlinwebapp.bookstore.domain.*
+import com.kotlinwebapp.bookstore.domain.dto.*
+import com.kotlinwebapp.bookstore.domain.entities.*
+import com.kotlinwebapp.bookstore.exceptions.InvalidAuthorException
 
-fun AuthorEntity.toAuthorDto(): AuthorDto {
-    return AuthorDto(
+/*
+ * ======================
+ *     Extensões para Autores
+ * ======================
+ */
+
+// Extensões para AuthorEntity
+fun AuthorEntity.toAuthorDto(): AuthorDto =
+    AuthorDto(
         id = this.id,
         name = this.name,
         image = this.image,
         description = this.description,
-        age = this.age,
+        age = this.age
+    )
+
+fun AuthorEntity.toAuthorSummaryDto(): AuthorSummaryDto {
+    val authorId = this.id ?: throw InvalidAuthorException()
+    return AuthorSummaryDto(
+        id = authorId,
+        name = this.name,
+        image = this.image
     )
 }
 
-fun AuthorDto.toAuthorEntity(): AuthorEntity {
-    return AuthorEntity(
+// Extensões para AuthorDto
+fun AuthorDto.toAuthorEntity(): AuthorEntity =
+    AuthorEntity(
         id = this.id,
         name = this.name,
         image = this.image,
         description = this.description,
-        age = this.age,
+        age = this.age
     )
-}
 
-fun AuthorUpdateRequestDto.toAuthorUpdateRequest() = AuthorUpdateRequest(
-    id = this.id,
-    name = this.name,
-    image = this.image,
-    description = this.description,
-    age = this.age,
-)
+// Extensões para AuthorUpdateRequestDto
+fun AuthorUpdateRequestDto.toAuthorUpdateRequest(): AuthorUpdateRequest =
+    AuthorUpdateRequest(
+        id = this.id,
+        name = this.name,
+        image = this.image,
+        description = this.description,
+        age = this.age
+    )
+
+// Extensões para AuthorSummaryDto
+fun AuthorSummaryDto.toAuthorSummary(): AuthorSummary =
+    AuthorSummary(
+        id = this.id,
+        name = this.name,
+        image = this.image
+    )
+
+/*
+ * ======================
+ *     Extensões para Livros
+ * ======================
+ */
+
+// Extensão para BookSummary: converte para BookEntity
+fun BookSummary.toBookEntity(author: AuthorEntity): BookEntity =
+    BookEntity(
+        isbn = this.isbn,
+        title = this.title,
+        description = this.description,
+        image = this.image,
+        authorEntity = author
+    )
+
+// Extensão para BookSummaryDto: converte para BookSummary
+fun BookSummaryDto.toBookSummary(): BookSummary =
+    BookSummary(
+        isbn = this.isbn,
+        title = this.title,
+        description = this.description,
+        image = this.image,
+        author = this.author.toAuthorSummary()
+    )
+
+// Extensão para BookEntity: converte para BookSummaryDto
+fun BookEntity.toBookSummaryDto(): BookSummaryDto =
+    BookSummaryDto(
+        isbn = this.isbn,
+        title = this.title,
+        description = this.description,
+        image = this.image,
+        author = this.authorEntity.toAuthorSummaryDto()
+    )
