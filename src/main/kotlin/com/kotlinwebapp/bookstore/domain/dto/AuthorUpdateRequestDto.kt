@@ -5,7 +5,7 @@ import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 
-class AuthorUpdateRequestDto(
+data class AuthorUpdateRequestDto(
     val id: Long?,
     val name: String?,
     val age: Int?,
