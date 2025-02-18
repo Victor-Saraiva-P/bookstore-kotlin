@@ -61,4 +61,23 @@ class BookServiceImplTest @Autowired constructor(
         assertThat(recaledBook).isNotNull()
         assertThat(isCreated).isFalse()
     }
+
+    @Test
+    fun `teste que list retorna uma lista vazia quando nao houver books na database`(){
+        val result = underTest.list()
+        assertThat(result).isEmpty()
+    }
+
+    @Test
+    fun `test que list retorna uma lista de books quando ha books na database` (){
+        val savedAuthor = authorRepository.save(testAuthorEntityA())
+        assertThat(savedAuthor).isNotNull()
+
+        val savedBook = bookRepository.save(testBookEntityA(BOOK_A_ISBN, savedAuthor))
+        assertThat(savedBook).isNotNull()
+
+        val result = underTest.list()
+        assertThat(result).hasSize(1)
+        assertThat(result[0]).isEqualTo(savedBook)
+    }
 }

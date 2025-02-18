@@ -10,11 +10,13 @@ import com.kotlinwebapp.bookstore.testBookEntityA
 import com.kotlinwebapp.bookstore.testBookSummaryDtoA
 import com.ninjasquad.springmockk.MockkBean
 import io.mockk.every
+import org.hamcrest.CoreMatchers.equalTo
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.MediaType
 import org.springframework.test.web.servlet.MockMvc
+import org.springframework.test.web.servlet.get
 import org.springframework.test.web.servlet.put
 import org.springframework.test.web.servlet.result.StatusResultMatchersDsl
 import java.lang.AssertionError
@@ -25,8 +27,7 @@ private const val BOOKS_BASE_URL = "/v1/books"
 @SpringBootTest
 @AutoConfigureMockMvc
 class BooksControllerTest @Autowired constructor(
-    private val mockMvc: MockMvc,
-    @MockkBean val bookService: BookService
+    private val mockMvc: MockMvc, @MockkBean val bookService: BookService
 ) {
     val objectMapper = ObjectMapper()
 
@@ -41,8 +42,7 @@ class BooksControllerTest @Autowired constructor(
     }
 
     private fun assertThatUserCreatedUpdated(
-        isCreated: Boolean,
-        statusCodeAssertionError: StatusResultMatchersDsl.() -> Unit
+        isCreated: Boolean, statusCodeAssertionError: StatusResultMatchersDsl.() -> Unit
     ) {
         val isbn = "978-1-234567-92-3"
         val author = testAuthorEntityA(id = 1)
@@ -102,5 +102,29 @@ class BooksControllerTest @Autowired constructor(
             accept = MediaType.APPLICATION_JSON
             content = objectMapper.writeValueAsString(bookSummaryDto)
         }.andExpect { status { isBadRequest() } }
+    }
+
+    @Test
+    fun `test que readManyBooks retorna uma lista de books`() {
+        val isbn = "978-032-539299-2658"
+        val bookList = listOf(testBookEntityA(isbn = isbn, testAuthorEntityA(id = 1)))
+
+        every {
+            bookService.list()
+        } answers {
+            bookList
+        }
+
+        mockMvc.get(BOOKS_BASE_URL) {
+            contentType = MediaType.APPLICATION_JSON
+            accept(MediaType.APPLICATION_JSON)
+        }.andExpect {
+            status { isOk() }
+            content { jsonPath("$[0].isbn", equalTo(isbn)) }
+            content { jsonPath("$[0].title", equalTo(bookList.first().title)) }
+            content { jsonPath("$[0].image", equalTo(bookList.first().image)) }
+            content { jsonPath("$[0].author.name", equalTo(bookList.first().authorEntity.name)) }
+            content { jsonPath("$[0].author.image", equalTo(bookList.first().authorEntity.image)) }
+        }
     }
 }
