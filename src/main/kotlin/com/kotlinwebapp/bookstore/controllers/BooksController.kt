@@ -2,7 +2,6 @@ package com.kotlinwebapp.bookstore.controllers
 
 import com.kotlinwebapp.bookstore.domain.dto.BookSummaryDto
 import com.kotlinwebapp.bookstore.exceptions.InvalidAuthorException
-import com.kotlinwebapp.bookstore.services.AuthorService
 import com.kotlinwebapp.bookstore.services.BookService
 import com.kotlinwebapp.bookstore.toBookSummary
 import com.kotlinwebapp.bookstore.toBookSummaryDto
@@ -31,4 +30,8 @@ class BooksController(
         }
     }
 
+    @GetMapping
+    fun readManyBooks(): List<BookSummaryDto> {
+        return bookService.list().map { it.toBookSummaryDto() }
+    }
 }
