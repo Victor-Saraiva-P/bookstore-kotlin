@@ -127,4 +127,44 @@ class BooksControllerTest @Autowired constructor(
             content { jsonPath("$[0].author.image", equalTo(bookList.first().authorEntity.image)) }
         }
     }
+
+    @org.junit.jupiter.api.Test
+    fun `test que lista retorna nenhum book quando nao tem nenhum book com um determinado author`() {
+        every {
+            bookService.list(authorId = any())
+        } answers {
+            emptyList()
+        }
+
+        mockMvc.get("$BOOKS_BASE_URL?author=999") {
+            contentType = MediaType.APPLICATION_JSON
+            accept(MediaType.APPLICATION_JSON)
+        }.andExpect {
+            status { isOk() }
+            content { json("[]") }
+        }
+    }
+
+    @Test
+    fun `test que list so retorna books que tenham o author requisitado`() {
+        val isbn = "978-032-539299-2658"
+        val bookList = listOf(testBookEntityA(isbn = isbn, testAuthorEntityA(id = 1)))
+        every {
+            bookService.list(authorId = 1L)
+        } answers {
+            bookList
+        }
+
+        mockMvc.get("$BOOKS_BASE_URL?author=1") {
+            contentType = MediaType.APPLICATION_JSON
+            accept(MediaType.APPLICATION_JSON)
+        }.andExpect {
+            status { isOk() }
+            content { jsonPath("$[0].isbn", equalTo(isbn)) }
+            content { jsonPath("$[0].title", equalTo(bookList.first().title)) }
+            content { jsonPath("$[0].image", equalTo(bookList.first().image)) }
+            content { jsonPath("$[0].author.name", equalTo(bookList.first().authorEntity.name)) }
+            content { jsonPath("$[0].author.image", equalTo(bookList.first().authorEntity.image)) }
+        }
+    }
 }
