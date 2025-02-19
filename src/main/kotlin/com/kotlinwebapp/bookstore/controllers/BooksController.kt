@@ -31,7 +31,7 @@ class BooksController(
     }
 
     @GetMapping
-    fun readManyBooks(): List<BookSummaryDto> {
-        return bookService.list().map { it.toBookSummaryDto() }
+    fun readManyBooks(@RequestParam("author") authorId: Long?): List<BookSummaryDto> {
+        return bookService.list(authorId).map { it.toBookSummaryDto() }
     }
 }

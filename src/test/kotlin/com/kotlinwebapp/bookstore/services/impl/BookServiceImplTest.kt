@@ -4,6 +4,7 @@ import com.kotlinwebapp.bookstore.*
 import com.kotlinwebapp.bookstore.domain.AuthorSummary
 import com.kotlinwebapp.bookstore.repositories.AuthorRepository
 import com.kotlinwebapp.bookstore.repositories.BookRepository
+import io.mockk.every
 import jakarta.transaction.Transactional
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
@@ -63,13 +64,13 @@ class BookServiceImplTest @Autowired constructor(
     }
 
     @Test
-    fun `teste que list retorna uma lista vazia quando nao houver books na database`(){
+    fun `teste que list retorna uma lista vazia quando nao houver books na database`() {
         val result = underTest.list()
         assertThat(result).isEmpty()
     }
 
     @Test
-    fun `test que list retorna uma lista de books quando ha books na database` (){
+    fun `test que list retorna uma lista de books quando ha books na database`() {
         val savedAuthor = authorRepository.save(testAuthorEntityA())
         assertThat(savedAuthor).isNotNull()
 
@@ -77,6 +78,31 @@ class BookServiceImplTest @Autowired constructor(
         assertThat(savedBook).isNotNull()
 
         val result = underTest.list()
+        assertThat(result).hasSize(1)
+        assertThat(result[0]).isEqualTo(savedBook)
+    }
+
+    @Test
+    fun `test que list retorna nenhum book quando o author id nao der match com nenhum livro`() {
+        val savedAuthor = authorRepository.save(testAuthorEntityA())
+        assertThat(savedAuthor).isNotNull()
+
+        val savedBook = bookRepository.save(testBookEntityA(BOOK_A_ISBN, savedAuthor))
+        assertThat(savedBook).isNotNull()
+
+        val result = underTest.list(authorId = savedAuthor.id!! + 1)
+        assertThat(result).isEmpty()
+    }
+
+    @Test
+    fun `test que list retorna um book quando o author id der match com o livro`() {
+        val savedAuthor = authorRepository.save(testAuthorEntityA())
+        assertThat(savedAuthor).isNotNull()
+
+        val savedBook = bookRepository.save(testBookEntityA(BOOK_A_ISBN, savedAuthor))
+        assertThat(savedBook).isNotNull()
+
+        val result = underTest.list(authorId = savedAuthor.id!!)
         assertThat(result).hasSize(1)
         assertThat(result[0]).isEqualTo(savedBook)
     }
