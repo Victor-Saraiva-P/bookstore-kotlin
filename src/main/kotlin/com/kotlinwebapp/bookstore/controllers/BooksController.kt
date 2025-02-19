@@ -34,4 +34,11 @@ class BooksController(
     fun readManyBooks(@RequestParam("author") authorId: Long?): List<BookSummaryDto> {
         return bookService.list(authorId).map { it.toBookSummaryDto() }
     }
+
+    @GetMapping(path = ["/{isbn}"])
+    fun readOneBook(@PathVariable("isbn") isbn: String): ResponseEntity<BookSummaryDto> {
+        return bookService.get(isbn)?.let { ResponseEntity(it.toBookSummaryDto(), HttpStatus.OK) } ?: ResponseEntity(
+            HttpStatus.NOT_FOUND
+        )
+    }
 }
