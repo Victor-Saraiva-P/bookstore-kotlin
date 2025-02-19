@@ -1,13 +1,10 @@
 package com.kotlinwebapp.bookstore.controllers
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.kotlinwebapp.bookstore.domain.dto.AuthorSummaryDto
-import com.kotlinwebapp.bookstore.domain.dto.BookSummaryDto
+import com.kotlinwebapp.bookstore.*
+import com.kotlinwebapp.bookstore.domain.BookUpdateRequest
+import com.kotlinwebapp.bookstore.domain.dto.BookUpdateRequestDto
 import com.kotlinwebapp.bookstore.services.BookService
-import com.kotlinwebapp.bookstore.testAuthorEntityA
-import com.kotlinwebapp.bookstore.testAuthorSummaryDtoA
-import com.kotlinwebapp.bookstore.testBookEntityA
-import com.kotlinwebapp.bookstore.testBookSummaryDtoA
 import com.ninjasquad.springmockk.MockkBean
 import io.mockk.every
 import org.hamcrest.CoreMatchers.equalTo
@@ -17,9 +14,9 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.MediaType
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.get
+import org.springframework.test.web.servlet.patch
 import org.springframework.test.web.servlet.put
 import org.springframework.test.web.servlet.result.StatusResultMatchersDsl
-import java.lang.AssertionError
 import kotlin.test.Test
 
 private const val BOOKS_BASE_URL = "/v1/books"
@@ -185,7 +182,7 @@ class BooksControllerTest @Autowired constructor(
     }
 
     @Test
-    fun `test que quando readOneBook retorna HTTP 200 quando um book eh encontrado`(){
+    fun `test que quando readOneBook retorna HTTP 200 quando um book eh encontrado`() {
         val isbn = "978-032-539299-2658"
         val book = testBookEntityA(isbn = isbn, testAuthorEntityA(id = 1))
 
@@ -195,7 +192,7 @@ class BooksControllerTest @Autowired constructor(
             book
         }
 
-        mockMvc.get("$BOOKS_BASE_URL/$isbn") {
+        mockMvc.get("$BOOKS_BASE_URL/$BOOK_A_ISBN") {
             contentType = MediaType.APPLICATION_JSON
             accept(MediaType.APPLICATION_JSON)
         }.andExpect {
@@ -205,6 +202,53 @@ class BooksControllerTest @Autowired constructor(
             content { jsonPath("$.image", equalTo(book.image)) }
             content { jsonPath("$.author.name", equalTo(book.authorEntity.name)) }
             content { jsonPath("$.author.image", equalTo(book.authorEntity.image)) }
+        }
+    }
+
+    @Test
+    fun `test que bookPartialUpdate retorna HTTP 400 com IllegalStateException`() {
+        val newTitle = "novo titulo"
+
+        every {
+            bookService.partialUpdate(any(), any())
+        } throws IllegalStateException()
+
+        val bookUpdateRequestDto = BookUpdateRequestDto(title = newTitle)
+
+        mockMvc.patch("$BOOKS_BASE_URL/$BOOK_A_ISBN") {
+            contentType = MediaType.APPLICATION_JSON
+            accept = MediaType.APPLICATION_JSON
+            content = objectMapper.writeValueAsString(bookUpdateRequestDto)
+        }.andExpect { status { isBadRequest() } }
+    }
+
+    @Test
+    fun `test que bookPartialUpdate retorna HTTP 200 com sucesso`() {
+        val newTitle = "novo titulo"
+        val bookUpdateRequest = BookUpdateRequest(title = newTitle)
+        val bookUpdateRequestDto = BookUpdateRequestDto(title = newTitle)
+
+        val bookEntity = testBookEntityA(isbn = BOOK_A_ISBN, testAuthorEntityA(id = 1)).apply {
+            title = newTitle
+        }
+
+        every {
+            bookService.partialUpdate(BOOK_A_ISBN, bookUpdateRequest)
+        } answers {
+            bookEntity
+        }
+
+        mockMvc.patch("$BOOKS_BASE_URL/$BOOK_A_ISBN") {
+            contentType = MediaType.APPLICATION_JSON
+            accept = MediaType.APPLICATION_JSON
+            content = objectMapper.writeValueAsString(bookUpdateRequestDto)
+        }.andExpect {
+            status { isOk() }
+            content { jsonPath("$.isbn", equalTo(BOOK_A_ISBN)) }
+            content { jsonPath("$.title", equalTo(newTitle)) }
+            content { jsonPath("$.image", equalTo(bookEntity.image)) }
+            content { jsonPath("$.author.name", equalTo(bookEntity.authorEntity.name)) }
+            content { jsonPath("$.author.image", equalTo(bookEntity.authorEntity.image)) }
         }
     }
 }
