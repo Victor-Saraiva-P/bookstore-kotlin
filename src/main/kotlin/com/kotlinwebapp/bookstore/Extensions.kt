@@ -93,3 +93,10 @@ fun BookEntity.toBookSummaryDto(): BookSummaryDto =
         image = this.image,
         author = this.authorEntity.toAuthorSummaryDto()
     )
+
+fun BookUpdateRequestDto.toBookUpdateRequest(): BookUpdateRequest =
+    BookUpdateRequest(
+        title = this.title,
+        description = this.description,
+        image = this.image
+    )
