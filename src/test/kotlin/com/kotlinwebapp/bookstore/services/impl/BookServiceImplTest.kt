@@ -182,4 +182,26 @@ class BookServiceImplTest @Autowired constructor(
         assertThat(result).isNotNull()
         assertThat(result.image).isEqualTo(newImage)
     }
+
+    @Test
+    fun `test que deleta com sucesso um book da database`() {
+        val savedAuthor = authorRepository.save(testAuthorEntityA())
+        assertThat(savedAuthor).isNotNull()
+
+        val savedBook = bookRepository.save(testBookEntityA(BOOK_A_ISBN, savedAuthor))
+        assertThat(savedBook).isNotNull()
+
+        underTest.delete(BOOK_A_ISBN)
+
+        val result = bookRepository.findByIdOrNull(BOOK_A_ISBN)
+        assertThat(result).isNull()
+    }
+
+    @Test
+    fun `test que delete com sucesso deleta um book que nao estava na database`() {
+        underTest.delete(BOOK_A_ISBN)
+
+        val result = bookRepository.findByIdOrNull(BOOK_A_ISBN)
+        assertThat(result).isNull()
+    }
 }

@@ -12,10 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.MediaType
-import org.springframework.test.web.servlet.MockMvc
-import org.springframework.test.web.servlet.get
-import org.springframework.test.web.servlet.patch
-import org.springframework.test.web.servlet.put
+import org.springframework.test.web.servlet.*
 import org.springframework.test.web.servlet.result.StatusResultMatchersDsl
 import kotlin.test.Test
 
@@ -249,6 +246,20 @@ class BooksControllerTest @Autowired constructor(
             content { jsonPath("$.image", equalTo(bookEntity.image)) }
             content { jsonPath("$.author.name", equalTo(bookEntity.authorEntity.name)) }
             content { jsonPath("$.author.image", equalTo(bookEntity.authorEntity.image)) }
+        }
+    }
+
+    @Test
+    fun `test que deleteBook deleta um book com sucesso`() {
+        every {
+            bookService.delete(BOOK_A_ISBN)
+        } answers {}
+
+        mockMvc.delete("$BOOKS_BASE_URL/$BOOK_A_ISBN") {
+            contentType = MediaType.APPLICATION_JSON
+            accept = MediaType.APPLICATION_JSON
+        }.andExpect {
+            status { isNoContent() }
         }
     }
 }
